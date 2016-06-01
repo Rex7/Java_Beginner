@@ -1,0 +1,44 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package MultiThreading;
+
+/**
+ *
+ * @author Regis
+ */
+class Threads extends Thread
+{
+    public void run()
+    {
+       for(int i=0;i<10;i++)
+       {
+            System.out.println("child thread");
+            Thread.yield();
+       }
+       
+    }
+}
+class Threadm  extends Thread
+{
+    public void run()
+    {
+        for(int i=0;i<10;i++)
+            System.out.println("am running");
+    }
+}
+public class YieldDemo {
+    public static void main(String[] args) {
+        Threads s = new Threads();
+        Threadm sm = new Threadm();
+        sm.setPriority(8);
+        
+        s.start();
+        sm.start();
+        for(int i=0;i<10;i++)
+            System.out.println("Main Thread");
+    }
+    
+}

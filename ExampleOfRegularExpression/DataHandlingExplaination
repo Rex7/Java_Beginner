@@ -1,0 +1,8 @@
+DataInputStream and DataOutputSTream are both useful for many purpose like write file and write data to be sent to anther file
+//File handling using dataStream
+when we use Datainputstream to read file then we get the pointer to FileInputStream();
+when we use DataOutputSTream to write file the we get the pointer FileOutputStream();
+//Data Handling
+when we use DataInputSTream to read data  we get a pointer from new InputStream
+when we use DataOutputStream to write data we get a pointer  from new OutputStream
+
