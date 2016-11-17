@@ -8,6 +8,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import java.io.File;
 import java.util.Enumeration;
 import javax.swing.AbstractButton;
@@ -48,7 +49,7 @@ class PhotoShop extends javax.swing.JFrame {
     int no_of_count = 0;
     JLabel imagelabel;
     JButton upload, reset, blur, circle, edge;
-    JSlider slider,slider_x,slider_y;
+    JSlider slider, slider_x, slider_y;
     Mat src, des, original;
     String filename;
     JRadioButton guassian_blur, median_blur, box_blur;
@@ -67,12 +68,12 @@ class PhotoShop extends javax.swing.JFrame {
         box_blur = new JRadioButton("Box Blur");
 
         slider = new JSlider(JSlider.HORIZONTAL, 0, 20, 0);
-        slider_x=new JSlider(JSlider.HORIZONTAL,0,100,0);
-        slider_y=new JSlider(JSlider.HORIZONTAL,0,100,0);
+        slider_x = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
+        slider_y = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
         //setting both x and y silder to invisible
         slider_x.setVisible(false);
         slider_y.setVisible(false);
-       
+
         buttongroup = new ButtonGroup();
         //adding the radio buttons to button
         buttongroup.add(guassian_blur);
@@ -111,7 +112,7 @@ class PhotoShop extends javax.swing.JFrame {
         add(median_blur);
         add(guassian_blur);
         add(box_blur);
-        
+
         //listeneing for change in slider values
         slider.addChangeListener(new ChangeListener() {
 
@@ -162,15 +163,16 @@ class PhotoShop extends javax.swing.JFrame {
                         double t0 = Core.getTickCount();
                         switch (getSelection(buttongroup)) {
                             case "Gauassian Blur":
-                                slider_x.setName("x");
                                 slider_x.setVisible(true);
                                 slider_y.setVisible(true);
-                                 Imgproc.GaussianBlur(src, des, new Size(slider.getValue(),slider.getValue()), slider_x.getValue(), slider_y.getValue());
-                                 img = getImage(des);
+                                Imgproc.GaussianBlur(src, des, new Size(slider.getValue(), slider.getValue()), slider_x.getValue(), slider_y.getValue());
+                                img = getImage(des);
                                 updateImage(img);
                                 break;
                             case "Meddian Blur":
-
+                                Imgproc.medianBlur(src, des, slider.getValue());
+                                img = getImage(des);
+                                updateImage(img);
                                 break;
                             case "Box Blur":
                                 Imgproc.boxFilter(src, des, des.depth(), new Size(slider.getValue(), slider.getValue()));
@@ -255,16 +257,24 @@ class PhotoShop extends javax.swing.JFrame {
     public void onCall() {
         src = Imgcodecs.imread(filename);
         original = Imgcodecs.imread(filename);
+
         des = new Mat(src.rows(), src.cols(), src.type());
         BufferedImage img = getImage(src);
         imagelabel.setIcon(new ImageIcon((Image) img));
     }
 
-    public BufferedImage getImage(Mat m) {
-        BufferedImage img = new BufferedImage(m.width(), m.height(), BufferedImage.TYPE_3BYTE_BGR);
-        DataBufferByte bytedata = (DataBufferByte) img.getRaster().getDataBuffer();
-        byte b[] = bytedata.getData();
-        m.get(0, 0, b);
-        return img;
+    public BufferedImage getImage(Mat mat) {
+        int type;
+        if (mat.channels() == 1) {
+            type = BufferedImage.TYPE_BYTE_GRAY;
+        } else {
+            type = BufferedImage.TYPE_3BYTE_BGR;
+        }
+        BufferedImage image = new BufferedImage(mat.width(), mat.height(), type);
+        WritableRaster raster = image.getRaster();
+        DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
+        byte[] data = dataBuffer.getData();
+        mat.get(0, 0, data);
+        return image;
     }
 }
