@@ -10,6 +10,7 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.awt.image.WritableRaster;
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Enumeration;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
@@ -21,8 +22,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -39,9 +38,11 @@ public class PhotoShopDemo {
 
     public static void main(String[] args) {
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        new PhotoShop();
+        PhotoShop photoshop = new PhotoShop();
+        photoshop.setVisible(true);
+        photoshop.setSize(600, 600);
+        photoshop.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
-
 }
 
 class PhotoShop extends javax.swing.JFrame {
@@ -66,14 +67,12 @@ class PhotoShop extends javax.swing.JFrame {
         guassian_blur = new JRadioButton("Gauassian Blur");
         median_blur = new JRadioButton("Meddian Blur");
         box_blur = new JRadioButton("Box Blur");
-
         slider = new JSlider(JSlider.HORIZONTAL, 0, 20, 0);
         slider_x = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
         slider_y = new JSlider(JSlider.HORIZONTAL, 0, 100, 0);
         //setting both x and y silder to invisible
         slider_x.setVisible(false);
         slider_y.setVisible(false);
-
         buttongroup = new ButtonGroup();
         //adding the radio buttons to button
         buttongroup.add(guassian_blur);
@@ -112,19 +111,7 @@ class PhotoShop extends javax.swing.JFrame {
         add(median_blur);
         add(guassian_blur);
         add(box_blur);
-
-        //listeneing for change in slider values
-        slider.addChangeListener(new ChangeListener() {
-
-            @Override
-            public void stateChanged(ChangeEvent e) {
-
-            }
-
-        });
-
         upload.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(ActionEvent evt) {
                 JFileChooser chooser = new JFileChooser();
@@ -146,13 +133,13 @@ class PhotoShop extends javax.swing.JFrame {
                         no_of_count++;
                     }
                 }
-                System.out.println("Count" + no_of_count);
 
             }
 
         });
         blur.addActionListener(new ActionListener() {
             double elapsed;
+            BigDecimal big = new BigDecimal(elapsed);
 
             @Override
             public void actionPerformed(ActionEvent event) {
@@ -163,6 +150,8 @@ class PhotoShop extends javax.swing.JFrame {
                         double t0 = Core.getTickCount();
                         switch (getSelection(buttongroup)) {
                             case "Gauassian Blur":
+                                System.out.println("Bound location " + slider_x.getLocation());
+                                System.out.println("Bound location y" + slider_y.getLocation());
                                 slider_x.setVisible(true);
                                 slider_y.setVisible(true);
                                 Imgproc.GaussianBlur(src, des, new Size(slider.getValue(), slider.getValue()), slider_x.getValue(), slider_y.getValue());
@@ -170,6 +159,8 @@ class PhotoShop extends javax.swing.JFrame {
                                 updateImage(img);
                                 break;
                             case "Meddian Blur":
+                                System.out.println("Bound location x " + slider_x.getLocation());
+                                System.out.println("Bound location y" + slider_y.getLocation());
                                 Imgproc.medianBlur(src, des, slider.getValue());
                                 img = getImage(des);
                                 updateImage(img);
@@ -180,12 +171,11 @@ class PhotoShop extends javax.swing.JFrame {
                                 updateImage(img);
                                 break;
                             default:
-
                                 break;
 
                         }
                         elapsed = ((double) Core.getTickCount() - t0) / Core.getTickFrequency();
-                        JOptionPane.showMessageDialog(rootPane, "Seconds " + Math.abs(elapsed));
+                        JOptionPane.showMessageDialog(rootPane, "Seconds " + big.setScale(2, BigDecimal.ROUND_FLOOR));
                     } else {
                         JOptionPane.showMessageDialog(rootPane, "Sorry Slider Value Cant Be Zero");
                     }
@@ -200,8 +190,11 @@ class PhotoShop extends javax.swing.JFrame {
                 if (!(filename.isEmpty())) {
                     onCall();
                     slider.setValue(0);
+                    slider_x.setVisible(false);
+                    slider_y.setVisible(false);
+                    buttongroup.clearSelection();
                 } else {
-                    System.out.println("Its empty");
+                    JOptionPane.showMessageDialog(rootPane, "There is nothing to reset");
                 }
             }
         });
@@ -230,11 +223,6 @@ class PhotoShop extends javax.swing.JFrame {
 
             }
         });
-
-        setVisible(true);
-        setSize(600, 600);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
     }
 
     public String getSelection(ButtonGroup buttongroup_) {
@@ -249,9 +237,7 @@ class PhotoShop extends javax.swing.JFrame {
     }
 
     public void updateImage(BufferedImage im) {
-
         imagelabel.setIcon(new ImageIcon((Image) im));
-
     }
 
     public void onCall() {
