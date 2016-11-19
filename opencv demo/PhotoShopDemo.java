@@ -12,6 +12,7 @@ import java.awt.image.WritableRaster;
 import java.io.File;
 import java.math.BigDecimal;
 import java.util.Enumeration;
+import java.util.NoSuchElementException;
 import javax.swing.AbstractButton;
 import javax.swing.ButtonGroup;
 import javax.swing.ImageIcon;
@@ -49,7 +50,7 @@ class PhotoShop extends javax.swing.JFrame {
 
     int no_of_count = 0;
     JLabel imagelabel;
-    JButton upload, reset, blur, circle, edge;
+    JButton upload, reset, blur, circle, edge, clear;
     JSlider slider, slider_x, slider_y;
     Mat src, des, original;
     String filename;
@@ -64,6 +65,7 @@ class PhotoShop extends javax.swing.JFrame {
         blur = new JButton("Blur");
         circle = new JButton("Draw Circle");
         edge = new JButton("Edge");
+        clear = new JButton("Clear");
         guassian_blur = new JRadioButton("Gauassian Blur");
         median_blur = new JRadioButton("Meddian Blur");
         box_blur = new JRadioButton("Box Blur");
@@ -105,12 +107,14 @@ class PhotoShop extends javax.swing.JFrame {
         add(blur);
         add(circle);
         add(edge);
+        add(clear);
         add(slider);
         add(slider_x);
         add(slider_y);
         add(median_blur);
         add(guassian_blur);
         add(box_blur);
+
         upload.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent evt) {
@@ -147,6 +151,8 @@ class PhotoShop extends javax.swing.JFrame {
                 BufferedImage img;
                 if (src != null && des != null) {
                     if (slider.getValue() != 0) {
+                        String selected = getSelection(buttongroup);
+                        System.out.println("Selected" + selected);
                         double t0 = Core.getTickCount();
                         switch (getSelection(buttongroup)) {
                             case "Gauassian Blur":
@@ -159,8 +165,10 @@ class PhotoShop extends javax.swing.JFrame {
                                 updateImage(img);
                                 break;
                             case "Meddian Blur":
-                                System.out.println("Bound location x " + slider_x.getLocation());
-                                System.out.println("Bound location y" + slider_y.getLocation());
+                                if(slider_x.isVisible()&&slider_y.isVisible()){
+                                    slider_x.setVisible(false);
+                                    slider_y.setVisible(false);
+                                }
                                 Imgproc.medianBlur(src, des, slider.getValue());
                                 img = getImage(des);
                                 updateImage(img);
@@ -171,8 +179,8 @@ class PhotoShop extends javax.swing.JFrame {
                                 updateImage(img);
                                 break;
                             default:
+                                JOptionPane.showMessageDialog(rootPane, "Select one of the blur methods ");
                                 break;
-
                         }
                         elapsed = ((double) Core.getTickCount() - t0) / Core.getTickFrequency();
                         JOptionPane.showMessageDialog(rootPane, "Seconds " + big.setScale(2, BigDecimal.ROUND_FLOOR));
@@ -192,11 +200,26 @@ class PhotoShop extends javax.swing.JFrame {
                     slider.setValue(0);
                     slider_x.setVisible(false);
                     slider_y.setVisible(false);
+                    slider_x.setValue(0);
+                    slider_y.setValue(0);
                     buttongroup.clearSelection();
                 } else {
                     JOptionPane.showMessageDialog(rootPane, "There is nothing to reset");
                 }
             }
+        });
+        clear.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                buttongroup.clearSelection();
+                slider.setValue(0);
+                if (slider_x.isVisible() && slider_y.isVisible()) {
+                    slider_x.setValue(0);
+                    slider_y.setValue(0);
+                }
+            }
+
         });
         circle.addActionListener(new ActionListener() {
 
@@ -226,14 +249,21 @@ class PhotoShop extends javax.swing.JFrame {
     }
 
     public String getSelection(ButtonGroup buttongroup_) {
-        for (Enumeration<AbstractButton> button = buttongroup_.getElements(); buttongroup_.getElements().hasMoreElements();) {
-            AbstractButton buttons = button.nextElement();
-            if (buttons.isSelected()) {
-                return buttons.getText();
+        String select = "null";
+        try {
+            Enumeration<AbstractButton> b = buttongroup_.getElements();
+            while (b.hasMoreElements()) {
+                AbstractButton buttons = b.nextElement();
+                if (buttons.isSelected()) {
+                    System.out.println("text " + buttons.getText());
+                    return buttons.getText();
+                }
             }
 
+        } catch (NoSuchElementException ex) {
+            System.out.println("Exception ");
         }
-        return "";
+        return select;
     }
 
     public void updateImage(BufferedImage im) {
@@ -249,14 +279,28 @@ class PhotoShop extends javax.swing.JFrame {
         imagelabel.setIcon(new ImageIcon((Image) img));
     }
 
+    public boolean getCheck() {
+        return filename.isEmpty();
+    }
+
     public BufferedImage getImage(Mat mat) {
+        BufferedImage image;
+        Mat des_ = new Mat();
+        Size s = new Size(640, 480);
         int type;
         if (mat.channels() == 1) {
             type = BufferedImage.TYPE_BYTE_GRAY;
         } else {
             type = BufferedImage.TYPE_3BYTE_BGR;
         }
-        BufferedImage image = new BufferedImage(mat.width(), mat.height(), type);
+        if (mat.height() > 640 && mat.width() > 480) {
+            Imgproc.resize(mat, des_, s);
+            System.out.println("heiht " + des_.height());
+            System.out.println("Width " + des_.width());
+            Imgcodecs.imwrite("katt.jpg", des_);
+
+        }
+        image = new BufferedImage(mat.width(), mat.height(), type);
         WritableRaster raster = image.getRaster();
         DataBufferByte dataBuffer = (DataBufferByte) raster.getDataBuffer();
         byte[] data = dataBuffer.getData();
