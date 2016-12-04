@@ -18,13 +18,14 @@ public class GenericsDemo {
           
         
     }
-    public static void m1(ArrayList<String> al)
-    {
-        
-    }
-    public static void m1(ArrayList <Integer> a)
-    {
-        
-    }
+   
+//    public static void m1(ArrayList<String> al)
+//    {
+//        
+//    }
+//    public static void m1(ArrayList <Integer> a)
+//    {
+//        
+//    }
     
 }

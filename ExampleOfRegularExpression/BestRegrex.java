@@ -16,11 +16,9 @@ import java.util.Calendar;
 public class BestRegrex {
     public static void main(String...args)
     {
-      String res="regischarles50@gmail.com";
+      String res="regischarles50gmail.com";
       String email="regischarles7@gmail.com";
-      Calendar cal = Calendar.getInstance();
-        System.out.println("Month"+cal.get(Calendar.MONTH));
-        System.out.println("Current day"+cal.get(Calendar.DATE));
+      
       String pattern="[a-zA-z]+[0-9]+(@)?([a-zA-Z]+(\\.com)?)";
         System.out.println("matches?"+res.matches(pattern));
         System.out.println("matches"+email.matches(pattern));

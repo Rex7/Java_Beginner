@@ -24,7 +24,8 @@ public class IntToLong {
     public static void main(String[] args) {
         int p=10;
        //error m(p);
-        int i=10L;
+        //int i=10L;
+        //uncomment the above one to get a error 
     }
     
 }
