@@ -4,6 +4,8 @@ import java.awt.FlowLayout;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.image.BufferedImage;
@@ -20,9 +22,13 @@ import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+import javax.swing.KeyStroke;
 import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.Point;
@@ -50,22 +56,20 @@ class PhotoShop extends javax.swing.JFrame {
 
     int no_of_count = 0;
     JLabel imagelabel;
-    JButton upload, reset, blur, circle, edge, clear;
+    JButton edge;
     JSlider slider, slider_x, slider_y;
     Mat src, des, original;
     String filename;
     JRadioButton guassian_blur, median_blur, box_blur;
     ButtonGroup buttongroup;
     File file;
+    JMenuBar bar;
+    JMenuItem upload, reset, clear, blur, circle, erosion, dilation;
+    JMenu menu, filter, morph;
+    //constructor where all elements are added
 
     public PhotoShop() {
-        imagelabel = new JLabel("Image ");
-        upload = new JButton("Upload the image");
-        reset = new JButton("Reset");
-        blur = new JButton("Blur");
-        circle = new JButton("Draw Circle");
-        edge = new JButton("Edge");
-        clear = new JButton("Clear");
+        imagelabel = new JLabel();
         guassian_blur = new JRadioButton("Gauassian Blur");
         median_blur = new JRadioButton("Meddian Blur");
         box_blur = new JRadioButton("Box Blur");
@@ -99,21 +103,74 @@ class PhotoShop extends javax.swing.JFrame {
         slider_y.setPaintLabels(true);
         slider_y.setPaintTicks(true);
         filename = new String();
+        //Menu Setting 
+        bar = new JMenuBar();
+        //main menu
+        menu = new JMenu("File");
+
+        filter = new JMenu("Filter");
+        morph = new JMenu("Morphology");
+        // menu item
+        upload = new JMenuItem("upload");
+        reset = new JMenuItem("Reset");
+        clear = new JMenuItem("clear");
+        blur = new JMenuItem("blur");
+        circle = new JMenuItem("Circle");
+        erosion = new JMenuItem("Erosion");
+        dilation = new JMenuItem("Dilation");
+        morph.add(erosion);
+        morph.add(dilation);
+
+        //setting shortcut keys
+        upload.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK));
+        reset.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK));
+        blur.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_B, InputEvent.CTRL_DOWN_MASK));
+
+        filter.add(blur);
+        menu.add(upload);
+        menu.add(reset);
+        menu.add(clear);
+        bar.add(menu);
+        bar.add(filter);
+        bar.add(morph);
+        setJMenuBar(bar);
         setLayout(new FlowLayout());
         //adding all to frame
         add(imagelabel);
-        add(upload);
-        add(reset);
-        add(blur);
-        add(circle);
-        add(edge);
-        add(clear);
         add(slider);
         add(slider_x);
         add(slider_y);
         add(median_blur);
         add(guassian_blur);
         add(box_blur);
+        erosion.addActionListener(new ActionListener(){
+            @Override 
+            public void actionPerformed(ActionEvent event){
+                if(src==null){
+                    JOptionPane.showMessageDialog(rootPane, "Erosion is called \n.Upload Some Image"); 
+                }
+                else {
+                    Imgproc.erode(src, des, new Mat());
+                    BufferedImage img = getImage(des);
+                    imagelabel.setIcon(new ImageIcon((Image)img));
+                }
+              
+            }
+        });
+        dilation.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent evt){
+                if(src==null){
+                    JOptionPane.showMessageDialog(rootPane, "Dilation is called \n.Upload Some Image"); 
+                }
+                else {
+                    Imgproc.dilate(src, des, new Mat());
+                    BufferedImage img = getImage(des);
+                    imagelabel.setIcon(new ImageIcon((Image)img));
+                }
+            }
+        });
+        
 
         upload.addActionListener(new ActionListener() {
             @Override
@@ -152,12 +209,9 @@ class PhotoShop extends javax.swing.JFrame {
                 if (src != null && des != null) {
                     if (slider.getValue() != 0) {
                         String selected = getSelection(buttongroup);
-                        System.out.println("Selected" + selected);
                         double t0 = Core.getTickCount();
-                        switch (getSelection(buttongroup)) {
+                        switch (selected) {
                             case "Gauassian Blur":
-                                System.out.println("Bound location " + slider_x.getLocation());
-                                System.out.println("Bound location y" + slider_y.getLocation());
                                 slider_x.setVisible(true);
                                 slider_y.setVisible(true);
                                 Imgproc.GaussianBlur(src, des, new Size(slider.getValue(), slider.getValue()), slider_x.getValue(), slider_y.getValue());
@@ -165,7 +219,7 @@ class PhotoShop extends javax.swing.JFrame {
                                 updateImage(img);
                                 break;
                             case "Meddian Blur":
-                                if(slider_x.isVisible()&&slider_y.isVisible()){
+                                if (slider_x.isVisible() && slider_y.isVisible()) {
                                     slider_x.setVisible(false);
                                     slider_y.setVisible(false);
                                 }
@@ -183,11 +237,13 @@ class PhotoShop extends javax.swing.JFrame {
                                 break;
                         }
                         elapsed = ((double) Core.getTickCount() - t0) / Core.getTickFrequency();
-                        JOptionPane.showMessageDialog(rootPane, "Seconds " + big.setScale(2, BigDecimal.ROUND_FLOOR));
+                        JOptionPane.showMessageDialog(rootPane, "Seconds " + big.setScale(4, BigDecimal.ROUND_FLOOR));
                     } else {
                         JOptionPane.showMessageDialog(rootPane, "Sorry Slider Value Cant Be Zero");
                     }
 
+                } else {
+                    JOptionPane.showMessageDialog(rootPane, "Upload Some Image");
                 }
 
             }
@@ -204,7 +260,14 @@ class PhotoShop extends javax.swing.JFrame {
                     slider_y.setValue(0);
                     buttongroup.clearSelection();
                 } else {
-                    JOptionPane.showMessageDialog(rootPane, "There is nothing to reset");
+
+                    if (getCheck() && !getSelection(buttongroup).equals("null")) {
+                        buttongroup.clearSelection();
+                        slider.setValue(0);
+                    } else {
+                        JOptionPane.showMessageDialog(rootPane, "There is nothing to reset");
+                    }
+
                 }
             }
         });
@@ -225,6 +288,9 @@ class PhotoShop extends javax.swing.JFrame {
 
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (original == null) {
+                    JOptionPane.showMessageDialog(rootPane, "First Upload The Image");
+                }
                 imagelabel.addMouseListener(new MouseAdapter() {
                     @Override
                     public void mousePressed(MouseEvent e) {
@@ -240,12 +306,7 @@ class PhotoShop extends javax.swing.JFrame {
             }
 
         });
-        edge.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
 
-            }
-        });
     }
 
     public String getSelection(ButtonGroup buttongroup_) {
@@ -255,13 +316,12 @@ class PhotoShop extends javax.swing.JFrame {
             while (b.hasMoreElements()) {
                 AbstractButton buttons = b.nextElement();
                 if (buttons.isSelected()) {
-                    System.out.println("text " + buttons.getText());
                     return buttons.getText();
                 }
             }
 
         } catch (NoSuchElementException ex) {
-            System.out.println("Exception ");
+
         }
         return select;
     }
@@ -283,6 +343,7 @@ class PhotoShop extends javax.swing.JFrame {
         return filename.isEmpty();
     }
 
+    //Converting Mat object to image 
     public BufferedImage getImage(Mat mat) {
         BufferedImage image;
         Mat des_ = new Mat();
@@ -295,8 +356,6 @@ class PhotoShop extends javax.swing.JFrame {
         }
         if (mat.height() > 640 && mat.width() > 480) {
             Imgproc.resize(mat, des_, s);
-            System.out.println("heiht " + des_.height());
-            System.out.println("Width " + des_.width());
             Imgcodecs.imwrite("katt.jpg", des_);
 
         }
