@@ -17,6 +17,7 @@ public class TypeCasting {
         Scanner rs = new Scanner(System.in);
         int result ;
         float a,b,c;
+      
         System.out.println("Enter value for a");
         a=rs.nextFloat();
         System.out.println("Enter value for b");
