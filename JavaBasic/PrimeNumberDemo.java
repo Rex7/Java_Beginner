@@ -14,16 +14,16 @@ public class PrimeNumberDemo {
     public static void main(String[] args) {
         //printing prime number from 1 to 100
         int count = 0;
-        int i, j;
-        for (i = 1; i < 100; i++) {
+        int number, j;
+        for (number = 1; number < 100; number++) {
 
             for (j = 1; j < 100; j++) {
-                if (i % j == 0) {
+                if (number % j == 0) {
                     count++;
                 }
             }
             if (count == 2) {
-                System.out.println(i);
+                System.out.println(number);
 
             }
             count = 0;

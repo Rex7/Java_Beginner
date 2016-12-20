@@ -16,7 +16,7 @@ class box implements regis{
 public class MarkerInterfaceDemo {
     public static void main(String[] args) {
         box b = new box();
-       
+       // it checks if box implements regis uisng instanceof keyword
         if(b instanceof regis){
             b.display();
         }
